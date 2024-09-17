@@ -14,7 +14,7 @@ int main(void)
     //--------------------------------------------------------------------------------------
     const int screenWidth = 1080;
     const int screenHeight = 720;
-    Vector3 plane_position = { 0.0f, 0.0f, 0.0f };
+    Vector3 plane_position = { 0.0f, 25.0f, -5.0f };
 
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_HIGHDPI);
     InitWindow(screenWidth, screenHeight, "FLIGHT MANIA");
@@ -37,15 +37,15 @@ int main(void)
     ModelInstance cottage_instance = { cottage_model, cottage_texture, (Vector3){ 0.0f, 0.0f, 0.0f }, 1.0f, WHITE };
 
     AppendModel(models, plane_instance);
-    AppendModel(models, house_instance);
-    AppendModel(models, cottage_instance);
+    // AppendModel(models, house_instance);
+    // AppendModel(models, cottage_instance);
 
 
     float pitch = 0.0f;
     float roll = 0.0f;
     float yaw = 0.0f;
 
-    float speed = 10.0f; // Units per second
+    float speed = 25.0f; // Units per second
 
     SetTargetFPS(60); // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
@@ -106,8 +106,10 @@ int main(void)
         forward = Vector3Normalize(forward);
 
         // Update plane's position
-        models->models[0].position = Vector3Add(models->models[0].position, Vector3Scale((Vector3){0.0f,0.0f,1.0f}, speed * GetFrameTime()));
-        models->models[0].position = Vector3Add(models->models[0].position, Vector3Scale((Vector3){1.0f,0.0f,0.0f}, turning_value ));
+        models->models[0].position.z += speed * GetFrameTime();//Vector3Add(models->models[0].position, Vector3Scale((Vector3){0.0f,0.0f,1.0f}, speed * GetFrameTime()));
+        models->models[0].position.x += turning_value;//(models->models[0].position, Vector3Scale((Vector3){1.0f,0.0f,0.0f}, turning_value ));
+        models->models[0].position.y = 25.0f;
+
 
         // Transformation matrix for rotations
         models->models[0].model.transform = MatrixRotateXYZ((Vector3){ DEG2RAD * pitch, DEG2RAD * yaw, DEG2RAD * roll });
@@ -119,7 +121,7 @@ int main(void)
         // }
 
         // Update camera to follow the plane
-        Vector3 cameraOffset = { 0.0f, 100.0f, -150.0f };// Adjusted offset values
+        Vector3 cameraOffset = { 0.0f, 100.0f, -300.0f };// Adjusted offset values
         //Vector3 cameraPositionOffset = Vector3Transform(cameraOffset, rotation);
         camera.position = Vector3Add(models->models[0].position, cameraOffset);
         camera.target = models->models[0].position;
@@ -127,7 +129,7 @@ int main(void)
         //----------------------------------------------------------------------------------
 
         // Update terrain based on plane position
-        UpdateTerrain(&terrain, models->models[0].position, forward);
+        UpdateTerrain(&terrain, models->models[0].position, forward, camera);
 
         // Draw
         //----------------------------------------------------------------------------------

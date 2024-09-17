@@ -8,10 +8,10 @@
 
 // Macros and constants
 #define CHUNK_SIZE 64          // Number of tiles per chunk side
-#define TILE_SCALE 1.0f        // Size of each tile
-#define MAX_CHUNKS 16          // Maximum number of terrain chunks
+#define TILE_SCALE 3.0f        // Size of each tile
+#define MAX_CHUNKS 60          // Maximum number of terrain chunks
 #define NOISE_FREQUENCY 0.01f  // Noise frequency
-#define NOISE_AMPLITUDE 20.0f  // Noise amplitude
+#define NOISE_AMPLITUDE 10.0f  // Noise amplitude
 
 // Structures
 
@@ -32,7 +32,7 @@ typedef struct {
 void InitTerrain(TerrainManager *terrain);
 
 // Update terrain based on the plane's position
-void UpdateTerrain(TerrainManager *terrain, Vector3 planePosition, Vector3 planeForward);
+void UpdateTerrain(TerrainManager *terrain, Vector3 planePosition, Vector3 planeForward, Camera3D camera);
 
 // Draw all terrain chunks
 void DrawTerrain(TerrainManager *terrain);

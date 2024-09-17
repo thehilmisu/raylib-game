@@ -7,8 +7,8 @@
 #include "raymath.h"
 #include <math.h>
 #include <stdlib.h>
-#include <string.h> // For memset
-#include "rlgl.h"   // For rl* functions
+#include <string.h> 
+#include "rlgl.h"   
 
 // Internal functions
 float GetNoiseValue(float x, float z);
@@ -25,28 +25,30 @@ void InitTerrain(TerrainManager *terrain) {
 
     // Initialize FastNoiseLite
     noise = fnlCreateState();
-    noise.seed = 1337;
+    noise.seed = 1000;
     noise.noise_type = FNL_NOISE_OPENSIMPLEX2;
     noise.frequency = NOISE_FREQUENCY;
 }
 
-void UpdateTerrain(TerrainManager *terrain, Vector3 planePosition, Vector3 planeForward) {
-    // Determine the chunk coordinates the plane is currently over
+void UpdateTerrain(TerrainManager *terrain, Vector3 planePosition, Vector3 planeForward, Camera camera) {
     float chunkSize = (CHUNK_SIZE - 1) * TILE_SCALE;
+
+    // Calculate the visible area
+    float maxDistance = camera.fovy * (float)720 / 1080;
+    int range = ceilf(maxDistance / chunkSize) + 1;
+
+    // Determine the chunk coordinates the plane is currently over
     int planeChunkX = (int)floorf(planePosition.x / chunkSize);
     int planeChunkZ = (int)floorf(planePosition.z / chunkSize);
 
     // Normalize the plane's forward direction to get chunk offsets
     Vector2 forwardDir = Vector2Normalize((Vector2){ planeForward.x, planeForward.z });
 
-    // Define the range of chunks to generate around the plane
-    int range = 2; // Adjust this value to generate more chunks around the plane
-
     // Loop over the range to generate chunks ahead and around the plane
     for (int z = -range; z <= range; z++) {
         for (int x = -range; x <= range; x++) {
-            int offsetX = planeChunkX + x + (int)(forwardDir.x * range);
-            int offsetZ = planeChunkZ + z + (int)(forwardDir.y * range);
+            int offsetX = planeChunkX + x;
+            int offsetZ = planeChunkZ + z;
 
             if (!IsChunkLoaded(terrain, offsetX, offsetZ)) {
                 Vector3 chunkPosition = {
@@ -58,10 +60,8 @@ void UpdateTerrain(TerrainManager *terrain, Vector3 planePosition, Vector3 plane
             }
         }
     }
-
-    // Unload distant chunks to free memory
-    UnloadFarChunks(terrain, planePosition, chunkSize, range + 1);
 }
+
 
 void UnloadFarChunks(TerrainManager *terrain, Vector3 planePosition, float chunkSize, int maxRange) {
     float maxDistance = maxRange * chunkSize;
@@ -96,9 +96,10 @@ void UnloadTerrain(TerrainManager *terrain) {
     terrain->chunkCount = 0;
 }
 
-float GetNoiseValue(float x, float z) {
+float GetNoiseValue(float x, float y, float z) {
     // Get noise value from FastNoiseLite
-    return fnlGetNoise2D(&noise, x, z) * NOISE_AMPLITUDE;
+    return fnlGetNoise3D(&noise, x, y, z) * NOISE_AMPLITUDE;
+    //return fnlGetNoise2D(&noise, x, z) * NOISE_AMPLITUDE;
 }
 
 static bool IsChunkLoaded(TerrainManager *terrain, int chunkX, int chunkZ) {
