@@ -14,11 +14,18 @@ int main(void)
     //--------------------------------------------------------------------------------------
     const int screenWidth = 1080;
     const int screenHeight = 720;
+
+
     Vector3 plane_position = { 0.0f, 25.0f, -5.0f };
 
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_HIGHDPI);
     InitWindow(screenWidth, screenHeight, "FLIGHT MANIA");
 
+    //to disable the raylib's debug messages.
+    SetTraceLogLevel(LOG_NONE);
+    // LOG_ALL: Show all messages.LOG_TRACE: Trace log messages.LOG_DEBUG: Debug log messages.
+    //LOG_INFO: Information log messages.LOG_WARNING: Warning log messages.LOG_ERROR: Error log messages.LOG_FATAL: Fatal error log messages.
+    
     ModelArray *models = CreateModelArray(0);
 
     // Load models and textures
@@ -48,6 +55,8 @@ int main(void)
     float speed = 25.0f; // Units per second
 
     SetTargetFPS(60); // Set our game to run at 60 frames-per-second
+    // Create a render texture for drawing the mini-axis
+    RenderTexture2D renderTexture = LoadRenderTexture(150, 150);
     //--------------------------------------------------------------------------------------
 
     // Camera setup
@@ -72,9 +81,11 @@ int main(void)
     {
         // Update
         //----------------------------------------------------------------------------------
+
+        float altitude = models->models[0].position.y;
         // Plane pitch (x-axis) controls
-        if (IsKeyDown(KEY_DOWN)) pitch += 0.6f;
-        else if (IsKeyDown(KEY_UP)) pitch -= 0.6f;
+        if (IsKeyDown(KEY_DOWN)) { pitch += 0.6f; altitude -= 1.0f;}
+        else if (IsKeyDown(KEY_UP)) { pitch -= 0.6f; altitude += 1.0f;}
         else
         {
             if (pitch > 0.3f) pitch -= 0.3f;
@@ -108,7 +119,7 @@ int main(void)
         // Update plane's position
         models->models[0].position.z += speed * GetFrameTime();//Vector3Add(models->models[0].position, Vector3Scale((Vector3){0.0f,0.0f,1.0f}, speed * GetFrameTime()));
         models->models[0].position.x += turning_value;//(models->models[0].position, Vector3Scale((Vector3){1.0f,0.0f,0.0f}, turning_value ));
-        models->models[0].position.y = 25.0f;
+        models->models[0].position.y = altitude;
 
 
         // Transformation matrix for rotations
@@ -133,13 +144,16 @@ int main(void)
 
         // Draw
         //----------------------------------------------------------------------------------
+
+        
+
         BeginDrawing();
 
-            ClearBackground(RAYWHITE);
-
+            ClearBackground(BLANK);
+      
             // Draw 3D models
             BeginMode3D(camera);
-                
+
                 // Enable wireframe mode
                 rlEnableWireMode();
                 
@@ -153,9 +167,8 @@ int main(void)
                 for (size_t i = 0; i < models->size; ++i) {
                     DrawModel(models->models[i].model, models->models[i].position, models->models[i].scale, models->models[i].color);
                 }
-               
-                //DrawGrid(10, 10.0f);
 
+                
             EndMode3D();
 
             char info[128];
@@ -164,12 +177,25 @@ int main(void)
             sprintf(info, "Altitude: %.2f units", models->models[0].position.y);
             DrawText(info, 10, 80, 20, BLACK);
 
+            // Draw the X axis in red
+            //DrawLine3D((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){ 120.0f, 0.0f, 0.0f }, RED);
+            DrawText("X", 2, 0, 20, RED);
+
+            // Draw the Y axis in green
+            //DrawLine3D((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){ 0.0f, 120.0f, 0.0f }, GREEN);
+            DrawText("Y", 0, 2, 20, GREEN);
+
+            // Draw the Z axis in blue
+            //DrawLine3D((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){ 0.0f, 0.0f, 120.0f }, BLUE);
+            DrawText("Z", 0, 0, 20, BLUE);
+
+
             // Draw controls info
-            DrawRectangle(30, 600, 340, 70, Fade(GREEN, 0.5f));
-            DrawRectangleLines(30, 600, 340, 70, Fade(DARKGREEN, 0.5f));
-            DrawText("Pitch controlled with: KEY_UP / KEY_DOWN", 40, 610, 10, DARKGRAY);
-            DrawText("Roll controlled with: KEY_LEFT / KEY_RIGHT", 40, 620, 10, DARKGRAY);
-            DrawText("Yaw controlled with: KEY_A / KEY_S", 40, 630, 10, DARKGRAY);
+            // DrawRectangle(30, 600, 340, 70, Fade(GREEN, 0.5f));
+            // DrawRectangleLines(30, 600, 340, 70, Fade(DARKGREEN, 0.5f));
+            // DrawText("Pitch controlled with: KEY_UP / KEY_DOWN", 40, 610, 10, DARKGRAY);
+            // DrawText("Roll controlled with: KEY_LEFT / KEY_RIGHT", 40, 620, 10, DARKGRAY);
+            // DrawText("Yaw controlled with: KEY_A / KEY_S", 40, 630, 10, DARKGRAY);
 
             DrawText("(c) HKN SoftCrafting", screenWidth - 200, screenHeight - 20, 10, DARKGRAY);
 

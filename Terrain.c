@@ -7,11 +7,13 @@
 #include "raymath.h"
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h> 
 #include "rlgl.h"   
 
 // Internal functions
 float GetNoiseValue(float x, float z);
+Color ColorLerp(Color colorA, Color colorB, float t);
 static Mesh GenerateTerrainMesh(int size, float scale, Vector3 offset);
 static void AddTerrainChunk(TerrainManager *terrain, Vector3 offset);
 static bool IsChunkLoaded(TerrainManager *terrain, int chunkX, int chunkZ);
@@ -96,10 +98,21 @@ void UnloadTerrain(TerrainManager *terrain) {
     terrain->chunkCount = 0;
 }
 
-float GetNoiseValue(float x, float y, float z) {
+float GetNoiseValue(float x, float z) {
     // Get noise value from FastNoiseLite
-    return fnlGetNoise3D(&noise, x, y, z) * NOISE_AMPLITUDE;
-    //return fnlGetNoise2D(&noise, x, z) * NOISE_AMPLITUDE;
+    //return fnlGetNoise3D(&noise, x, y, z) * NOISE_AMPLITUDE;
+    return fnlGetNoise2D(&noise, x, z) * NOISE_AMPLITUDE;
+}
+
+Color ColorLerp(Color colorA, Color colorB, float t) {
+    Color result;
+    
+    result.r = colorA.r + t * (colorB.r - colorA.r);
+    result.g = colorA.g + t * (colorB.g - colorA.g);
+    result.b = colorA.b + t * (colorB.b - colorA.b);
+    result.a = colorA.a + t * (colorB.a - colorA.a);
+    
+    return result;
 }
 
 static bool IsChunkLoaded(TerrainManager *terrain, int chunkX, int chunkZ) {
@@ -180,12 +193,12 @@ static Mesh GenerateTerrainMesh(int size, float scale, Vector3 offset) {
             // Define base colors
             Color waterColor = BLUE;
             Color landColor = GREEN;
-            Color mountainColor = GRAY;
+            Color mountainColor = BROWN;
             Color snowColor = WHITE;
 
             // Interpolate colors based on height
             Color color;
-
+            printf("normalized height = %f ", normalizedHeight);
             if (normalizedHeight < 0.3f) {
                 // Water to land transition
                 float t = normalizedHeight / 0.3f;

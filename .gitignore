@@ -4,3 +4,4 @@ resources/
 
 *.o
 
+.DS_Store/
