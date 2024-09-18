@@ -3,13 +3,8 @@
 #include "ModelArray.h"
 #include "rlgl.h"
 #include "Terrain.h"
+#include "Bullet.h"
 #include <stdio.h>
-
-typedef struct Bullet {
-    Vector3 position;
-    Vector3 direction;
-    bool active;
-} Bullet;
 
 
 //------------------------------------------------------------------------------------
@@ -29,12 +24,12 @@ int main(void)
     bullet.active = false;
 
 
-    SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_HIGHDPI);
+    //SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_HIGHDPI);
     InitWindow(screenWidth, screenHeight, "FLIGHT MANIA");
 
     //to disable the raylib's debug messages.
     SetTraceLogLevel(LOG_NONE);
-    // LOG_ALL: Show all messages.LOG_TRACE: Trace log messages.LOG_DEBUG: Debug log messages.
+    //LOG_ALL: Show all messages.LOG_TRACE: Trace log messages.LOG_DEBUG: Debug log messages.
     //LOG_INFO: Information log messages.LOG_WARNING: Warning log messages.LOG_ERROR: Error log messages.LOG_FATAL: Fatal error log messages.
     
     ModelArray *models = CreateModelArray(0);
@@ -43,16 +38,16 @@ int main(void)
     Model plane_model = LoadModel("resources/models/obj/plane.obj");
     Texture2D plane_texture = LoadTexture("resources/models/obj/plane_diffuse.png");
 
-    Model house_model = LoadModel("resources/models/obj/house.obj");
-    Texture2D house_texture = LoadTexture("resources/models/obj/house_diffuse.png");
+    // Model house_model = LoadModel("resources/models/obj/house.obj");
+    // Texture2D house_texture = LoadTexture("resources/models/obj/house_diffuse.png");
 
-    Model cottage_model = LoadModel("resources/models/obj/cottage_obj.obj");
-    Texture2D cottage_texture = LoadTexture("resources/models/obj/cottage_diffuse.png");
+    // Model cottage_model = LoadModel("resources/models/obj/cottage_obj.obj");
+    // Texture2D cottage_texture = LoadTexture("resources/models/obj/cottage_diffuse.png");
 
     // Create model instances
     ModelInstance plane_instance = { plane_model, plane_texture, plane_position, 1.0f, WHITE };
-    ModelInstance house_instance = { house_model, house_texture, (Vector3){ 0.0f, 40.0f, 0.0f }, 1.0f, WHITE };
-    ModelInstance cottage_instance = { cottage_model, cottage_texture, (Vector3){ 0.0f, 0.0f, 0.0f }, 1.0f, WHITE };
+    //ModelInstance house_instance = { house_model, house_texture, (Vector3){ 0.0f, 40.0f, 0.0f }, 1.0f, WHITE };
+    //ModelInstance cottage_instance = { cottage_model, cottage_texture, (Vector3){ 0.0f, 0.0f, 0.0f }, 1.0f, WHITE };
 
     AppendModel(models, plane_instance);
     // AppendModel(models, house_instance);
@@ -66,8 +61,7 @@ int main(void)
     float speed = 25.0f; // Units per second
 
     SetTargetFPS(60); // Set our game to run at 60 frames-per-second
-    // Create a render texture for drawing the mini-axis
-    RenderTexture2D renderTexture = LoadRenderTexture(150, 150);
+
     //--------------------------------------------------------------------------------------
 
     // Camera setup
@@ -163,14 +157,11 @@ int main(void)
         // Update the bullet if it's active
         if (bullet.active) {
             // Move the bullet forward in its direction
-            float bulletSpeed = 100.0f;  // Bullet speed
-            //bullet.position = Vector3Add(bullet.position, Vector3Scale(bullet.direction, bulletSpeed * GetFrameTime()));
-            bullet.position.z += bulletSpeed * GetFrameTime();
-
+            bullet.position = Vector3Add(bullet.position, Vector3Scale(bullet.direction, BULLET_SPEED * GetFrameTime()));
+        
             // Deactivate the bullet if it goes out of bounds (for example, if it exceeds 1000 units from the origin)
-            if (bullet.position.z > 1000.0f) {
+            if (Vector3Length(bullet.position) > (models->models->position.z + BULLET_RANGE)) {
                 bullet.active = false;
-                bullet.position.z = models->models->position.z;
             }
         }
 
@@ -199,26 +190,21 @@ int main(void)
                 }
 
                 if(bullet.active)
-                    DrawCube(bullet.position, 15.0f, 15.0f, 15.0f, RED);  // Draw the bullet as a rectangle
+                    DrawCube(bullet.position, 7.5f, 7.5f, 15.0f, RED);  // Draw the bullet as a rectangle
                 
             EndMode3D();
 
+            DrawRectangle(5, 45, 250, 90, Fade(GREEN, 0.5f));
+            DrawRectangleLines(5, 45, 250, 90, Fade(DARKGREEN, 0.5f));
             char info[128];
             sprintf(info, "Speed: %.2f units/s", speed);
-            DrawText(info, 10, 50, 20, WHITE);
+            DrawText(info, 10, 50, 15, WHITE);
             sprintf(info, "Altitude: %.2f units", models->models[0].position.y);
-            DrawText(info, 10, 80, 20, WHITE);
+            DrawText(info, 10, 70, 15, WHITE);
             sprintf(info, "Bullet Position: %f ", bullet.position.z);
-            DrawText(info, 10, 110, 20, WHITE);
+            DrawText(info, 10, 90, 15, WHITE);
             sprintf(info, "Bullet Active: %d ", bullet.active);
-            DrawText(info, 10, 140, 20, WHITE);
-
-            // Draw controls info
-            // DrawRectangle(30, 600, 340, 70, Fade(GREEN, 0.5f));
-            // DrawRectangleLines(30, 600, 340, 70, Fade(DARKGREEN, 0.5f));
-            // DrawText("Pitch controlled with: KEY_UP / KEY_DOWN", 40, 610, 10, DARKGRAY);
-            // DrawText("Roll controlled with: KEY_LEFT / KEY_RIGHT", 40, 620, 10, DARKGRAY);
-            // DrawText("Yaw controlled with: KEY_A / KEY_S", 40, 630, 10, DARKGRAY);
+            DrawText(info, 10, 110, 15, WHITE);
 
             DrawText("(c) HKN SoftCrafting", screenWidth - 200, screenHeight - 20, 10, DARKGRAY);
 
