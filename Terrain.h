@@ -1,46 +1,31 @@
-// Terrain.h
 #ifndef TERRAIN_H
 #define TERRAIN_H
 
 #include "raylib.h"
-#include <stddef.h>
-#include <stdbool.h>
 
-// Macros and constants
-#define CHUNK_SIZE 64          // Number of tiles per chunk side
-#define TILE_SCALE 3.0f        // Size of each tile
-#define MAX_CHUNKS 60          // Maximum number of terrain chunks
-#define NOISE_FREQUENCY 0.01f  // Noise frequency
-#define NOISE_AMPLITUDE 10.0f  // Noise amplitude
+#define CHUNK_SIZE 64          // Size of each terrain chunk
+#define TILE_SCALE 3.0f        // Scaling for each tile
+#define MAX_CHUNKS 100         // Maximum number of chunks loaded at once
+#define NOISE_AMPLITUDE 10.0f  // Amplitude of noise for terrain generation
+#define NOISE_FREQUENCY 0.01f  // Frequency of noise for terrain generation
 
-// Structures
-
-typedef struct {
-    Vector3 position; // Position offset of the chunk
-    Mesh mesh;
-    Model model;
+// Terrain chunk structure
+typedef struct TerrainChunk {
+    Vector3 position;  // Position of the chunk in the world
+    Mesh mesh;         // Terrain mesh for the chunk
+    Model model;       // Model generated from the mesh
 } TerrainChunk;
 
-typedef struct {
-    TerrainChunk chunks[MAX_CHUNKS];
-    int chunkCount;
+// Terrain manager structure
+typedef struct TerrainManager {
+    TerrainChunk chunks[MAX_CHUNKS];  // Array of terrain chunks
+    int chunkCount;                   // Number of currently loaded chunks
 } TerrainManager;
 
-// Function prototypes
-
-// Initialize the terrain manager
-void InitTerrain(TerrainManager *terrain);
-
-// Update terrain based on the plane's position
-void UpdateTerrain(TerrainManager *terrain, Vector3 planePosition, Vector3 planeForward, Camera3D camera);
-
-// Draw all terrain chunks
-void DrawTerrain(TerrainManager *terrain);
-
-// Unload all terrain resources
-void UnloadTerrain(TerrainManager *terrain);
-
-// Get noise value at a specific point (for collision detection)
-float GetNoiseValue(float x, float z);
+// Function declarations
+void InitTerrain(TerrainManager *terrain);                                   // Initialize the terrain system
+void UpdateTerrain(TerrainManager *terrain, Vector3 planePosition, Vector3 planeForward, Camera camera);  // Update terrain chunks based on the camera/plane position
+void DrawTerrain(TerrainManager *terrain);                                   // Draw the loaded terrain chunks
+void UnloadTerrain(TerrainManager *terrain);                                 // Unload all loaded terrain chunks
 
 #endif // TERRAIN_H

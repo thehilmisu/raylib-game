@@ -5,6 +5,13 @@
 #include "Terrain.h"
 #include <stdio.h>
 
+typedef struct Bullet {
+    Vector3 position;
+    Vector3 direction;
+    bool active;
+} Bullet;
+
+
 //------------------------------------------------------------------------------------
 // Program main entry point
 //------------------------------------------------------------------------------------
@@ -17,6 +24,10 @@ int main(void)
 
 
     Vector3 plane_position = { 0.0f, 25.0f, -5.0f };
+
+    Bullet bullet = { 0 };
+    bullet.active = false;
+
 
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_HIGHDPI);
     InitWindow(screenWidth, screenHeight, "FLIGHT MANIA");
@@ -116,6 +127,13 @@ int main(void)
         Vector3 forward = { rotation.m8, rotation.m9, rotation.m10 };
         forward = Vector3Normalize(forward);
 
+        // Plane shooting function
+        if (IsKeyPressed(KEY_SPACE) && !bullet.active) {
+            bullet.position = models->models[0].position;  // Set bullet position to plane's current position
+            bullet.direction = forward;  // Set bullet direction to the plane's forward vector
+            bullet.active = true;             // Activate the bullet
+        }
+
         // Update plane's position
         models->models[0].position.z += speed * GetFrameTime();//Vector3Add(models->models[0].position, Vector3Scale((Vector3){0.0f,0.0f,1.0f}, speed * GetFrameTime()));
         models->models[0].position.x += turning_value;//(models->models[0].position, Vector3Scale((Vector3){1.0f,0.0f,0.0f}, turning_value ));
@@ -142,10 +160,22 @@ int main(void)
         // Update terrain based on plane position
         UpdateTerrain(&terrain, models->models[0].position, forward, camera);
 
+        // Update the bullet if it's active
+        if (bullet.active) {
+            // Move the bullet forward in its direction
+            float bulletSpeed = 100.0f;  // Bullet speed
+            //bullet.position = Vector3Add(bullet.position, Vector3Scale(bullet.direction, bulletSpeed * GetFrameTime()));
+            bullet.position.z += bulletSpeed * GetFrameTime();
+
+            // Deactivate the bullet if it goes out of bounds (for example, if it exceeds 1000 units from the origin)
+            if (bullet.position.z > 1000.0f) {
+                bullet.active = false;
+                bullet.position.z = models->models->position.z;
+            }
+        }
+
         // Draw
         //----------------------------------------------------------------------------------
-
-        
 
         BeginDrawing();
 
@@ -161,34 +191,27 @@ int main(void)
                 DrawTerrain(&terrain);
                 
                 // Disable wireframe mode
-                 rlDisableWireMode();
+                rlDisableWireMode();
               
                 // Draw all models
                 for (size_t i = 0; i < models->size; ++i) {
                     DrawModel(models->models[i].model, models->models[i].position, models->models[i].scale, models->models[i].color);
                 }
 
+                if(bullet.active)
+                    DrawCube(bullet.position, 15.0f, 15.0f, 15.0f, RED);  // Draw the bullet as a rectangle
                 
             EndMode3D();
 
             char info[128];
             sprintf(info, "Speed: %.2f units/s", speed);
-            DrawText(info, 10, 50, 20, BLACK);
+            DrawText(info, 10, 50, 20, WHITE);
             sprintf(info, "Altitude: %.2f units", models->models[0].position.y);
-            DrawText(info, 10, 80, 20, BLACK);
-
-            // Draw the X axis in red
-            //DrawLine3D((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){ 120.0f, 0.0f, 0.0f }, RED);
-            DrawText("X", 2, 0, 20, RED);
-
-            // Draw the Y axis in green
-            //DrawLine3D((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){ 0.0f, 120.0f, 0.0f }, GREEN);
-            DrawText("Y", 0, 2, 20, GREEN);
-
-            // Draw the Z axis in blue
-            //DrawLine3D((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){ 0.0f, 0.0f, 120.0f }, BLUE);
-            DrawText("Z", 0, 0, 20, BLUE);
-
+            DrawText(info, 10, 80, 20, WHITE);
+            sprintf(info, "Bullet Position: %f ", bullet.position.z);
+            DrawText(info, 10, 110, 20, WHITE);
+            sprintf(info, "Bullet Active: %d ", bullet.active);
+            DrawText(info, 10, 140, 20, WHITE);
 
             // Draw controls info
             // DrawRectangle(30, 600, 340, 70, Fade(GREEN, 0.5f));
