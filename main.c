@@ -1,13 +1,10 @@
-#include "raylib.h"
-#include "raymath.h"
-#include "ModelArray.h"
-#include "rlgl.h"
-#include "Terrain.h"
-#include "Bullet.h"
-#include <stdio.h>
-#include "terraingeneration.h"
+#include "game.h"
+
 
 int main(void)
 {
-    terraingeneration();
+
+    LoadGame();
+    GameLoop();
+    UnloadGame();
 }
