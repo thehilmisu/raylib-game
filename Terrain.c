@@ -11,7 +11,6 @@
 // Internal functions
 float GetNoiseValue(float x, float z);
 float GetOctaveNoise(float x, float z, int octaves, float persistence, float lacunarity);
-Color ColorLerp(Color colorA, Color colorB, float t);
 static Mesh GenerateTerrainMesh(int size, float scale, Vector3 offset);
 static void AddTerrainChunk(TerrainManager *terrain, Vector3 offset);
 static bool IsChunkLoaded(TerrainManager *terrain, int chunkX, int chunkZ);
@@ -127,16 +126,16 @@ float GetNoiseValue(float x, float z) {
     return fnlGetNoise2D(&noise, x, z) * NOISE_AMPLITUDE;
 }
 
-Color ColorLerp(Color colorA, Color colorB, float t) {
-    Color result;
+// Color ColorLerp(Color colorA, Color colorB, float t) {
+//     Color result;
     
-    result.r = colorA.r + t * (colorB.r - colorA.r);
-    result.g = colorA.g + t * (colorB.g - colorA.g);
-    result.b = colorA.b + t * (colorB.b - colorA.b);
-    result.a = colorA.a + t * (colorB.a - colorA.a);
+//     result.r = colorA.r + t * (colorB.r - colorA.r);
+//     result.g = colorA.g + t * (colorB.g - colorA.g);
+//     result.b = colorA.b + t * (colorB.b - colorA.b);
+//     result.a = colorA.a + t * (colorB.a - colorA.a);
     
-    return result;
-}
+//     return result;
+// }
 
 static bool IsChunkLoaded(TerrainManager *terrain, int chunkX, int chunkZ) {
     float chunkSize = (CHUNK_SIZE - 1) * TILE_SCALE;

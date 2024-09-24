@@ -27,5 +27,6 @@ void InitTerrain(TerrainManager *terrain);                                   // 
 void UpdateTerrain(TerrainManager *terrain, Vector3 planePosition, Vector3 planeForward, Camera camera);  // Update terrain chunks based on the camera/plane position
 void DrawTerrain(TerrainManager *terrain);                                   // Draw the loaded terrain chunks
 void UnloadTerrain(TerrainManager *terrain);                                 // Unload all loaded terrain chunks
+//Color ColorLerp(Color colorA, Color colorB, float t);
 
 #endif // TERRAIN_H
