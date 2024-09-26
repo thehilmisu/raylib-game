@@ -5,11 +5,9 @@
 #include <stdio.h>
 #include "game.h"
 
-const int screenWidth = 1080;
-const int screenHeight = 720;
 
 ModelArray *models;
-Vector3 plane_position = { 0.0f, 25.0f, -5.0f };
+Vector3 plane_position = { PLANE_INITIAL_POSITION_X, PLANE_INITIAL_POSITION_Y, PLANE_INITIAL_POSITION_Z };
 Camera camera = { 0 };
 Bullet bullet = { 0 };
 
@@ -18,36 +16,43 @@ float roll = 0.0f;
 float yaw = 0.0f;
 float turning_value = 0.0f;
 float altitude = 0.0f;
-float speed = 25.0f; // Units per second
+float speed = PLANE_INITIAL_SPEED; // Units per second
+
+
+void LoadModels() {
+
+    models = CreateModelArray(0);
+    
+    Model plane_model = LoadModel(PLANE_MODEL);
+    Texture2D plane_texture = LoadTexture(PLANE_TEXTURE);
+
+    ModelInstance tmp_plane_instance = { plane_model, plane_texture, plane_position, PLANE_INITIAL_SCALE, WHITE };
+
+    AppendModel(models, tmp_plane_instance);
+}
 
 void LoadGame() {
     // Initialization
     //--------------------------------------------------------------------------------------
-    
 
     //SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_HIGHDPI);
-    InitWindow(screenWidth, screenHeight, "FLIGHT MANIA");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_NAME);
 
     //to disable the raylib's debug messages.
     SetTraceLogLevel(LOG_NONE);
 
-    SetTargetFPS(60); // Set our game to run at 60 frames-per-second
+    SetTargetFPS(TARGET_FPS); // Set our game to run at 60 frames-per-second
 
-    models = CreateModelArray(0);
+    LoadModels();
+
+    ModelInstance *plane_instance = &(models->models[0]);
 
     bullet.active = false;
 
-    Model plane_model = LoadModel("resources/models/obj/plane.obj");
-    Texture2D plane_texture = LoadTexture("resources/models/obj/plane_diffuse.png");
-
-    ModelInstance plane_instance = { plane_model, plane_texture, plane_position, 1.0f, WHITE };
-
-    AppendModel(models, plane_instance);
-
-    camera.position = (Vector3){ 0.0f, 5.0f, -15.0f }; // Initial camera position (will be updated)
-    camera.target = plane_instance.position;         // Camera looking at the plane
+    camera.position = (Vector3){ CAMERA_INITIAL_POSITION_X, CAMERA_INITIAL_POSITION_Y, CAMERA_INITIAL_POSITION_Z }; // Initial camera position (will be updated)
+    camera.target = plane_instance->position;           // Camera looking at the plane
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector
-    camera.fovy = 60.0f;                                // Camera field-of-view Y
+    camera.fovy = CAMERA_FOVY;                          // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;             // Camera type
 }
 
@@ -55,42 +60,77 @@ void GameLoop() {
     // Main game loop
     while (!WindowShouldClose()) // Detect window close button or ESC key
     {
-        
         ModelInstance *plane_instance = &(models->models[0]);
-        
-        UserInput(plane_instance);
-
         altitude = plane_instance->position.y;
+
+        UserInput(plane_instance);
 
         plane_instance->position.x += turning_value;
         plane_instance->position.y = altitude;
 
-
-        // Transformation matrix for rotations
-        plane_instance->model.transform = MatrixRotateXYZ((Vector3){ DEG2RAD * pitch, DEG2RAD * yaw, DEG2RAD * roll });
-
+        // Update the plane's transform to look at the mouse position
+        ObjectLookAtMouse(plane_instance->position, camera, &(plane_instance->model.transform));
+        Matrix userRotation = MatrixRotateXYZ((Vector3){ DEG2RAD * pitch, DEG2RAD * yaw, DEG2RAD * roll });
+        plane_instance->model.transform = MatrixMultiply(userRotation, plane_instance->model.transform);
 
         // Update camera to follow the plane
-        Vector3 cameraOffset = { 0.0f, 100.0f, -300.0f };// Adjusted offset values
+        Vector3 cameraOffset = { 0.0f, 100.0f, -300.0f }; // Adjusted offset values
         camera.position = Vector3Add(plane_instance->position, cameraOffset);
         camera.target = plane_instance->position;
-        camera.up = Vector3Transform((Vector3){ 0.0f, 0.0f, 1.0f }, plane_instance->model.transform); 
-        //----------------------------------------------------------------------------------
+        camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };
 
         if (bullet.active) {
             // Move the bullet forward in its direction
             bullet.position = Vector3Add(bullet.position, Vector3Scale(bullet.direction, BULLET_SPEED * GetFrameTime()));
         
-            // Deactivate the bullet if it goes out of bounds (for example, if it exceeds 1000 units from the origin)
+            // Deactivate the bullet if it goes out of bounds
             if (Vector3Length(bullet.position) > (plane_instance->position.z + BULLET_RANGE)) {
                 bullet.active = false;
             }
         }
 
         Draw();
-
     }
 }
+
+
+// void GameLoop() {
+//     // Main game loop
+//     while (!WindowShouldClose()) // Detect window close button or ESC key
+//     {
+//         ModelInstance *plane_instance = &(models->models[0]);
+//         altitude = plane_instance->position.y;
+
+//         UserInput(plane_instance);
+
+//         plane_instance->position.x += turning_value;
+//         plane_instance->position.y = altitude;
+
+//         // Update the plane's transform to look at the mouse position
+//         ObjectLookAtMouse(plane_instance->position, camera, &(plane_instance->model.transform));
+//         Matrix userRotation = MatrixRotateXYZ((Vector3){ DEG2RAD * pitch, DEG2RAD * yaw, DEG2RAD * roll });
+//         plane_instance->model.transform = MatrixMultiply(userRotation, plane_instance->model.transform);
+
+//         // Update camera to follow the plane
+//         Vector3 cameraOffset = { 0.0f, 100.0f, -300.0f }; // Adjusted offset values
+//         camera.position = Vector3Add(plane_instance->position, cameraOffset);
+//         camera.target = plane_instance->position;
+//         camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };
+
+//         if (bullet.active) {
+//             // Move the bullet forward in its direction
+//             bullet.position = Vector3Add(bullet.position, Vector3Scale(bullet.direction, BULLET_SPEED * GetFrameTime()));
+        
+//             // Deactivate the bullet if it goes out of bounds
+//             if (Vector3Length(bullet.position) > (plane_instance->position.z + BULLET_RANGE)) {
+//                 bullet.active = false;
+//             }
+//         }
+
+//         Draw();
+//     }
+// }
+
 
 void Draw() {
     // Draw
@@ -124,18 +164,65 @@ void Draw() {
             char info[128];
             sprintf(info, "Speed: %.2f units/s", speed);
             DrawText(info, 10, 50, 15, WHITE);
-            sprintf(info, "Altitude: %.2f units", models->models[0].position.y);
+            sprintf(info, "Altitude: %.2f units", altitude);
             DrawText(info, 10, 70, 15, WHITE);
             sprintf(info, "Bullet Position: %f ", bullet.position.z);
             DrawText(info, 10, 90, 15, WHITE);
             sprintf(info, "Bullet Active: %d ", bullet.active);
             DrawText(info, 10, 110, 15, WHITE);
 
-            DrawText("(c) HKN SoftCrafting", screenWidth - 200, screenHeight - 20, 10, DARKGRAY);
+            
+
+            DrawText("(c) HKN SoftCrafting", SCREEN_WIDTH - 200, SCREEN_HEIGHT - 20, 10, DARKGRAY);
 
         EndDrawing();
         //----------------------------------------------------------------------------------
 }
+
+void ObjectLookAtMouse(Vector3 objectPosition, Camera3D camera, Matrix *outTransform)
+{
+    // Get mouse position
+    Vector2 mousePosition = GetMousePosition();
+
+    // Create a ray from the camera to the mouse position
+    Ray ray = GetMouseRay(mousePosition, camera);
+
+    // Find a point along the ray
+    Vector3 targetPosition = Vector3Add(ray.position, Vector3Scale(ray.direction, 1000.0f));
+
+    // Calculate forward vector (from target to object)
+    Vector3 forward = Vector3Subtract(objectPosition, targetPosition); // Swapped order
+    forward = Vector3Normalize(forward);
+
+    // **Invert the forward vector to face away from the camera**
+    forward = Vector3Negate(forward);
+
+    // Define up vector (Y-up)
+    Vector3 up = (Vector3){ 0.0f, 1.0f, 0.0f };
+
+    // Calculate right vector
+    Vector3 right = Vector3Normalize(Vector3CrossProduct(up, forward));
+
+    // Recalculate up vector to ensure orthogonality
+    up = Vector3CrossProduct(forward, right);
+
+    // Create rotation matrix
+    Matrix rotation = {
+        right.x,    right.y,    right.z,    0.0f,
+        up.x,       up.y,       up.z,       0.0f,
+        forward.x,  forward.y,  forward.z,  0.0f,
+        0.0f,       0.0f,       0.0f,       1.0f
+    };
+
+    // Create translation matrix
+    Matrix translation = MatrixTranslate(objectPosition.x, objectPosition.y, objectPosition.z);
+
+    // Combine translation and rotation
+    *outTransform = MatrixMultiply(translation, rotation);
+}
+
+
+
 
 void UserInput(ModelInstance *plane_instance) {
         // Plane pitch (x-axis) controls
